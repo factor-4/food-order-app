@@ -14,8 +14,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.menu.id = :menuId")
     Double calculateAverageRatingByMenuId(@Param("menuId") Long menuId);
 
-    @Query("SELECT CASE WHEN COUNT(r)> 0 THEN true ELSE false END" +
-    "FROM Review r" +
+    @Query("SELECT CASE WHEN COUNT(r)> 0 THEN true ELSE false END " +
+    "FROM Review r " +
     "WHERE r.user.id = :userId AND r.menu.id = :menuId AND r.orderId = :orderId")
     boolean existsByUserIdAndMenuIdAndOrderId(
             @Param("userId") Long userId,

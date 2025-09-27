@@ -1,9 +1,11 @@
-package com.example.FoodOrderApp.menu.dtos;
+package com.example.FoodOrderApp.order.dtos;
 
 
+import com.example.FoodOrderApp.auth_users.dtos.UserDTO;
 import com.example.FoodOrderApp.auth_users.entity.User;
 import com.example.FoodOrderApp.enums.OrderStatus;
 import com.example.FoodOrderApp.enums.PaymentStatus;
+import com.example.FoodOrderApp.order.dtos.OrderItemDTO;
 import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.order.entity.Order;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +16,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)

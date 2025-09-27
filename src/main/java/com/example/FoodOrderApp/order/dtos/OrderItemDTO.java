@@ -1,5 +1,6 @@
-package com.example.FoodOrderApp.menu.dtos;
+package com.example.FoodOrderApp.order.dtos;
 
+import com.example.FoodOrderApp.menu.dtos.MenuDTO;
 import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.order.entity.Order;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

@@ -1,4 +1,4 @@
-package com.example.FoodOrderApp.menu.repository;
+package com.example.FoodOrderApp.order.repository;
 
 import com.example.FoodOrderApp.auth_users.entity.User;
 import com.example.FoodOrderApp.enums.OrderStatus;

@@ -1,6 +1,7 @@
 package com.example.FoodOrderApp.menu.dtos;
 
 import com.example.FoodOrderApp.category.entity.Category;
+import com.example.FoodOrderApp.review.dtos.ReviewDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.CascadeType;
@@ -15,6 +16,7 @@ import lombok.NonNull;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
