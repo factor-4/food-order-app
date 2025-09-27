@@ -1,9 +1,13 @@
 package com.example.FoodOrderApp.auth_users.dtos;
 
+import com.example.FoodOrderApp.role.dtos.RoleDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,7 +28,7 @@ public class UserDTO {
     private boolean isActive;
 
     private String address;
-    private Lis<RoleDTO> roles;
+    private List<RoleDTO> roles;
 
     private MultipartFile imageFile;
 }

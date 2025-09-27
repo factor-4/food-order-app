@@ -1,6 +1,7 @@
-package com.example.FoodOrderApp.menu.entity;
+package com.example.FoodOrderApp.order.entity;
 
 
+import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.order.entity.Order;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
