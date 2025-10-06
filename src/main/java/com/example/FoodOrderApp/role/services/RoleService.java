@@ -11,8 +11,9 @@ public interface RoleService  {
 
     Response<RoleDTO> updateRole(RoleDTO roleDTO);
 
-    Response<List <RoleDTO> > getAllROle(RoleDTO roleDTO);
+    Response<List <RoleDTO> > getAllRoles();
 
     Response<?> deleteROle(Long id);
+
 
 }
