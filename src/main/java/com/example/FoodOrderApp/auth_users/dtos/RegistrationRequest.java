@@ -3,8 +3,11 @@ package com.example.FoodOrderApp.auth_users.dtos;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.util.List;
+
+@Data
 
 public class RegistrationRequest {
 
@@ -26,6 +29,7 @@ public class RegistrationRequest {
     private String phoneNumber;
 
     private List<String> roles;
+
 
 
 }
