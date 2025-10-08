@@ -25,6 +25,9 @@ public class UserDTO {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    private String email;
+
+
     private boolean isActive;
 
     private String address;
