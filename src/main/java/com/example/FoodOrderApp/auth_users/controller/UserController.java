@@ -30,7 +30,7 @@ public class UserController {
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<?>> updateOwnAccount(
-            @ModelAttribute @Valid UserDTO userDTO,
+            @ModelAttribute  UserDTO userDTO,
             @RequestPart(value = "imageFile", required = false)MultipartFile imageFile
             ){
         userDTO.setImageFile(imageFile);
