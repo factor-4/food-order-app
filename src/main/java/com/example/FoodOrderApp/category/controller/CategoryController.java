@@ -36,7 +36,7 @@ public class CategoryController {
     public ResponseEntity <Response<CategoryDTO>> geCategoryById(@PathVariable  Long id){
         return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
-    
+
 
     @GetMapping("/all")
     public ResponseEntity <Response <List<CategoryDTO>>> getAllCategories(){

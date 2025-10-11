@@ -15,5 +15,5 @@ public class CategoryDTO {
     @NotBlank(message = "A name is required")
     private String name;
 
-    private String Description;
+    private String description;
 }
