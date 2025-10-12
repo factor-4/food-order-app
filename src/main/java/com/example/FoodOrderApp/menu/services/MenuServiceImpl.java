@@ -10,14 +10,18 @@ import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.menu.repository.MenuRepository;
 import com.example.FoodOrderApp.response.Response;
 import com.example.FoodOrderApp.review.dtos.ReviewDTO;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -168,6 +172,54 @@ public class MenuServiceImpl implements MenuService{
     @Override
     public Response<List<MenuDTO>> getMenus(Long categoryId, String search) {
         log.info("Inside getMenus()");
-        return null;
+
+        Specification<Menu> spec = buildSpecification(categoryId, search);
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+
+        List<Menu> menuList = menuRepository.findAll(spec, sort);
+
+        List<MenuDTO> menuDTOS = menuList.stream()
+                .map(menu -> modelMapper.map(menu, MenuDTO.class))
+                .toList();
+
+        return Response.<List<MenuDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Menu retrieved")
+                .data(menuDTOS)
+                .build();
+    }
+
+    private Specification<Menu> buildSpecification(Long categoryId, String search){
+        return (root, query, cb)-> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (categoryId != null){
+                predicates.add(cb.equal(
+                        root.get("category").get("id"),
+                        categoryId
+                ));
+            }
+
+            if(search != null && !search.isBlank()){
+                String searchTerm = "%" + search.toLowerCase() + "%";
+
+                predicates.add(cb.or(
+                        cb.like(
+                                cb.lower(root.get("name")),
+                                searchTerm
+                        ),
+                        cb.like(
+                                cb.lower(root.get("description")),
+                                searchTerm
+                        )
+                ));
+            }
+
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+
+
+        };
     }
 }
