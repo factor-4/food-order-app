@@ -9,6 +9,7 @@ import com.example.FoodOrderApp.menu.dtos.MenuDTO;
 import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.menu.repository.MenuRepository;
 import com.example.FoodOrderApp.response.Response;
+import com.example.FoodOrderApp.review.dtos.ReviewDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,21 +72,97 @@ public class MenuServiceImpl implements MenuService{
     public Response<MenuDTO> updateMenu(MenuDTO menuDTO) {
         log.info("Inside updateMenu()");
 
-        return null;
+        Menu existingMenu = menuRepository.findById(menuDTO.getId())
+                .orElseThrow(()-> new NotFoundException("Menu not found"));
+
+        Category category = categoryRepository.findById(menuDTO.getCategoryId())
+                .orElseThrow(()-> new NotFoundException("Category Not Found"));
+
+        String imageUrl = existingMenu.getImageUrl();
+        MultipartFile imageFile = menuDTO.getImageFile();
+
+        // check if new image was provided
+
+        if(imageFile != null && !imageFile.isEmpty()){
+            // delete old image in cloud if it exists
+            if(imageUrl != null && !imageUrl.isEmpty()){
+                String keyName = imageUrl.substring(imageUrl.lastIndexOf("/")+1);
+                awss3Service.deleteFile("menus/"+ keyName);
+                log.info("Deleted old menu image from s3");
+            }
+
+            String imageName = UUID.randomUUID().toString()+"-"+imageFile.getOriginalFilename();
+            URL newImageUrl = awss3Service.uploadFile("menus/"+ imageName, imageFile);
+
+            imageUrl = newImageUrl.toString();
+
+        }
+
+        if(menuDTO.getName() != null && !menuDTO.getName().isBlank()) existingMenu.setName(menuDTO.getName());
+
+        if(menuDTO.getDescription() != null && !menuDTO.getDescription().isBlank()) existingMenu.setDescription(menuDTO.getDescription());
+        if(menuDTO.getPrice() != null ) existingMenu.setPrice(menuDTO.getPrice());
+
+        existingMenu.setImageUrl(imageUrl);
+        existingMenu.setCategory(category);
+
+        Menu updatedMenu = menuRepository.save(existingMenu);
+
+        return Response.<MenuDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Menu updated successfully")
+                .data(modelMapper.map(updatedMenu, MenuDTO.class))
+                .build();
+
+
+
     }
 
     @Override
     public Response<MenuDTO> getMenuById(Long id) {
         log.info("Inside getMenuById()");
+        Menu existingMenu = menuRepository.findById(id)
+                .orElseThrow(()-> new NotFoundException("Menu not found"));
 
-        return null;
+        MenuDTO menuDTO = modelMapper.map(existingMenu, MenuDTO.class);
+
+
+        if(menuDTO.getReviews() != null){
+            menuDTO.getReviews().sort(Comparator.comparing(ReviewDTO::getId).reversed());
+        }
+
+
+        return Response.<MenuDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Menu retrieved successfully")
+                .data(menuDTO)
+                .build();
+
     }
 
     @Override
     public Response<?> deleteMenu(Long id) {
         log.info("Inside deleteMenu()");
 
-        return null;
+        Menu menuToDelete = menuRepository.findById(id)
+                .orElseThrow(()-> new NotFoundException("Menu not found"));
+
+        // Delete the image from s3 if it exists
+        String imageUrl = menuToDelete.getImageUrl();
+        if(imageUrl != null && !imageUrl.isEmpty()){
+            String keyName = imageUrl.substring(imageUrl.lastIndexOf("/")+1);
+            awss3Service.deleteFile(("menus/"+keyName));
+            log.info("Deleted image from s3: menus/ "+keyName);
+        }
+
+        menuRepository.deleteById(id);
+
+
+
+        return Response.<MenuDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Menu deleted successfully")
+                .build();
     }
 
     @Override
