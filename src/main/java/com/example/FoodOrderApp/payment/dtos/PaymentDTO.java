@@ -4,6 +4,7 @@ package com.example.FoodOrderApp.payment.dtos;
 import com.example.FoodOrderApp.auth_users.dtos.UserDTO;
 import com.example.FoodOrderApp.enums.PaymentStatus;
 import com.example.FoodOrderApp.order.dtos.OrderDTO;
+import com.example.FoodOrderApp.enums.PaymentGateway;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -23,6 +24,10 @@ public class PaymentDTO  {
     private BigDecimal amount;
 
     private PaymentStatus paymentStatus;
+
+    private String transactionId;
+
+    private PaymentGateway paymentGateway;
 
     private String failureReason;
 
