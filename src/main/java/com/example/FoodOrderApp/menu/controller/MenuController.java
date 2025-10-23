@@ -7,6 +7,7 @@ import com.example.FoodOrderApp.menu.services.MenuService;
 import com.example.FoodOrderApp.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,6 +61,8 @@ public class MenuController {
     public ResponseEntity<Response<List<MenuDTO>>> getMenus(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String search){
+
         return ResponseEntity.ok(menuService.getMenus(categoryId, search));
+
     }
 }
