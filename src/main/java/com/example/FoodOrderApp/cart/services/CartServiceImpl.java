@@ -204,7 +204,7 @@ public class CartServiceImpl implements CartService {
                 if (subtotal != null) {
                     totalAmount = totalAmount.add(subtotal);
                 }
-               
+
             }
         }
 
