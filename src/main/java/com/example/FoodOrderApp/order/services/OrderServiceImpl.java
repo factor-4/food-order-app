@@ -77,7 +77,7 @@ public class OrderServiceImpl  implements OrderService{
         if (deliveryAddress == null) {
             throw new NotFoundException("Delivery Address Not present for the user");
         }
-        Cart cart = cartRepository.findByUser_id(customer.getId())
+        Cart cart = cartRepository.findByUser_Id(customer.getId())
                 .orElseThrow(()-> new NotFoundException("Cart not found for the user" ));
 
 
@@ -102,7 +102,7 @@ public class OrderServiceImpl  implements OrderService{
                     .menu(cartItem.getMenu())
                     .quantity(cartItem.getQuantity())
                     .pricePerUnit(cartItem.getPricePerUnit())
-                    .subtotal(cartItem.getSubTotal())
+                    .subtotal(cartItem.getSubtotal())
                     .build();
             orderItems.add(orderItem);
             totalAmount = totalAmount.add(orderItem.getSubtotal());

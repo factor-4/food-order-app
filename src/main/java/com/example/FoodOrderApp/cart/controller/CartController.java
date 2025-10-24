@@ -8,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
 public class CartController {
+
     private final CartService cartService;
 
     @PostMapping("/items")
@@ -34,6 +36,7 @@ public class CartController {
         return ResponseEntity.ok(cartService.removeItem(cartItemId));
     }
 
+
     @GetMapping
     public ResponseEntity<Response<CartDTO>> getShoppingCart(){
         return ResponseEntity.ok(cartService.getShoppingCart());
@@ -43,4 +46,7 @@ public class CartController {
     public ResponseEntity<Response<?>> clearShoppingCart(){
         return ResponseEntity.ok(cartService.clearShoppingCart());
     }
+
+
 }
+

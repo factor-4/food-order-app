@@ -12,6 +12,7 @@ import com.example.FoodOrderApp.menu.entity.Menu;
 import com.example.FoodOrderApp.menu.repository.MenuRepository;
 import com.example.FoodOrderApp.response.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class CartServiceImpl  implements CartService{
+public class CartServiceImpl implements CartService {
+
 
     private final CartItemRepository cartItemRepository;
     private final CartRepository cartRepository;
@@ -39,79 +42,85 @@ public class CartServiceImpl  implements CartService{
     @Override
     public Response<?> addItemToCart(CartDTO cartDTO) {
         log.info("Inside addItemToCart()");
+
         Long menuId = cartDTO.getMenuId();
         int quantity = cartDTO.getQuantity();
 
         User user = userService.getCurrentLoggedInInUser();
 
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(()-> new NotFoundException("Menu Item not found"));
+                .orElseThrow(() -> new NotFoundException("Menu Item Not Found"));
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseGet(()-> {
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseGet(() -> {
                     Cart newCart = new Cart();
                     newCart.setUser(user);
-                    newCart.setCartItems( new ArrayList<>());
-                    return  cartRepository.save(newCart);
+                    newCart.setCartItems(new ArrayList<>());
+                    return cartRepository.save(newCart);
                 });
 
-        // check if the item is already in the cart
 
+        // Check if the item is already in the cart
         Optional<CartItem> optionalCartItem = cart.getCartItems().stream()
                 .filter(cartItem -> cartItem.getMenu().getId().equals(menuId))
                 .findFirst();
 
-        // If present, increment item
-        if(optionalCartItem.isPresent()){
+
+        //if present, increment item
+        if (optionalCartItem.isPresent()) {
             CartItem cartItem = optionalCartItem.get();
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
-            cartItem.setSubTotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+            cartItem.setSubtotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
             cartItemRepository.save(cartItem);
         } else {
-            // if not present add
+            //if nor present, and add it
             CartItem newCartItem = CartItem.builder()
                     .cart(cart)
                     .menu(menu)
                     .quantity(quantity)
                     .pricePerUnit(menu.getPrice())
-                    .subTotal(menu.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                    .subtotal(menu.getPrice().multiply(BigDecimal.valueOf(quantity)))
                     .build();
 
             cart.getCartItems().add(newCartItem);
+
             cartItemRepository.save(newCartItem);
+
         }
 
-        return  Response.builder()
+        //cartRepository.save(cart);// not, it will auto save and persists in the cart table
+
+        return Response.builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Item added successfully")
+                .message("Item added to cart successfully")
                 .build();
-
-
     }
+
 
     @Override
     public Response<?> incrementItem(Long menuId) {
         log.info("Inside incrementItem()");
+
         User user = userService.getCurrentLoggedInInUser();
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Cart Not found"));
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cart Not Found"));
 
         CartItem cartItem = cart.getCartItems().stream()
-                .filter(item-> item.getMenu().getId().equals(menuId))
-                .findFirst().orElseThrow(()-> new NotFoundException("Menu not found in cart"));
+                .filter(item -> item.getMenu().getId().equals(menuId))
+                .findFirst().orElseThrow(() -> new NotFoundException("Menu not found in cart"));
 
-
-        int newQuantity = cartItem.getQuantity() + 1;
+        int newQuantity = cartItem.getQuantity() + 1;  //INCREMENT THE ITEM
 
         cartItem.setQuantity(newQuantity);
 
-        cartItem.setSubTotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(newQuantity)));
+        cartItem.setSubtotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(newQuantity)));
+
         cartItemRepository.save(cartItem);
 
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Item quantity incremented successfully")
+                .message("Item incremented successfully")
                 .build();
 
 
@@ -120,21 +129,21 @@ public class CartServiceImpl  implements CartService{
     @Override
     public Response<?> decrementItem(Long menuId) {
         log.info("Inside decrementItem()");
+
         User user = userService.getCurrentLoggedInInUser();
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Cart Not found"));
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cart Not Found"));
 
         CartItem cartItem = cart.getCartItems().stream()
-                .filter(item-> item.getMenu().getId().equals(menuId))
-                .findFirst().orElseThrow(()-> new NotFoundException("Menu not found in cart"));
+                .filter(item -> item.getMenu().getId().equals(menuId))
+                .findFirst().orElseThrow(() -> new NotFoundException("Menu not found in cart"));
 
+        int newQuantity = cartItem.getQuantity() - 1; //DECREMENT THE ITEM
 
-        int newQuantity = cartItem.getQuantity() - 1;
-
-        if(newQuantity > 0) {
+        if (newQuantity > 0) {
             cartItem.setQuantity(newQuantity);
-            cartItem.setSubTotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(newQuantity)));
+            cartItem.setSubtotal(cartItem.getPricePerUnit().multiply(BigDecimal.valueOf(newQuantity)));
             cartItemRepository.save(cartItem);
         } else {
             cart.getCartItems().remove(cartItem);
@@ -143,7 +152,7 @@ public class CartServiceImpl  implements CartService{
 
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Item quantity updated successfully")
+                .message("Item decremented successfully")
                 .build();
     }
 
@@ -153,21 +162,22 @@ public class CartServiceImpl  implements CartService{
 
         User user = userService.getCurrentLoggedInInUser();
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Cart Not found"));
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cart not found for user"));
 
         CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(()-> new NotFoundException("Cart item not found"));
+                .orElseThrow(() -> new NotFoundException("Cart item not found"));
 
-        if(!cart.getCartItems().contains(cartItem)){
-            throw new NotFoundException("Cart item does not belong to this user cart");
-
+        if (!cart.getCartItems().contains(cartItem)) {
+            throw new NotFoundException("Cart item does not belong to this user's cart");
         }
         cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
+
+
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Item removed from cart  successfully")
+                .message("Item removed from cart successfully")
                 .build();
     }
 
@@ -175,31 +185,36 @@ public class CartServiceImpl  implements CartService{
     @Transactional(readOnly = true)
     public Response<CartDTO> getShoppingCart() {
         log.info("Inside getShoppingCart()");
+
         User user = userService.getCurrentLoggedInInUser();
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Cart Not found for user"));
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cart not found for user"));
 
         List<CartItem> cartItems = cart.getCartItems();
 
         CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
-        // calculat total amount
-
+        // Calculate total amount
         BigDecimal totalAmount = BigDecimal.ZERO;
-        if(cartItems!= null) {
-            for(CartItem item :  cartItems) {
-                totalAmount = totalAmount.add(item.getSubTotal());
+
+        if (cartItems != null) {
+            for (CartItem item : cartItems) {
+                BigDecimal subtotal = item.getSubtotal();
+                if (subtotal != null) {
+                    totalAmount = totalAmount.add(subtotal);
+                }
+               
             }
         }
 
-        cartDTO.setTotalAmount(totalAmount);
 
-        // remove the review from the response
+        cartDTO.setTotalAmount(totalAmount); //set the totalAmount
 
-        if(cartDTO.getCartItem() != null){
-            cartDTO.getCartItem()
-                    .forEach( item->item.getMenu().setReviews(null));
+        //remove the review from the response
+        if (cartDTO.getCartItems() != null) {
+            cartDTO.getCartItems()
+                    .forEach(item -> item.getMenu().setReviews(null));
         }
 
         return Response.<CartDTO>builder()
@@ -207,21 +222,22 @@ public class CartServiceImpl  implements CartService{
                 .message("Shopping cart retrieved successfully")
                 .data(cartDTO)
                 .build();
+
     }
 
     @Override
     public Response<?> clearShoppingCart() {
         log.info("Inside clearShoppingCart()");
+
         User user = userService.getCurrentLoggedInInUser();
 
-        Cart cart = cartRepository.findByUser_id(user.getId())
-                .orElseThrow(() -> new NotFoundException("Cart Not found for user"));
+        Cart cart = cartRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new NotFoundException("Cart not found for user"));
 
-
-        //Delete cart items from database first
+        //Delete cart items from the database first
         cartItemRepository.deleteAll(cart.getCartItems());
 
-        // clear the carts items collection
+        //Clear the cart's items collection
         cart.getCartItems().clear();
 
         //update the database
@@ -233,3 +249,7 @@ public class CartServiceImpl  implements CartService{
                 .build();
     }
 }
+
+
+
+

@@ -17,10 +17,10 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class CartItem {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @ManyToOne
     @JoinColumn(name = "cart_id")
@@ -32,10 +32,9 @@ public class CartItem {
 
     private int quantity;
 
-    private BigDecimal pricePerUnit;
+    private BigDecimal pricePerUnit;  // Store price here to avoid changes if Menu price changes
 
-    private BigDecimal subTotal;
-
+    private BigDecimal subtotal;
 
 
 }

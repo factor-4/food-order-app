@@ -8,20 +8,17 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-
 public class CartDTO {
 
     private Long id;
-
-    private List<CartItemDTO> cartItem;
-
+    private List<CartItemDTO> cartItems;
     private Long menuId;
-
     private int quantity;
-
     private BigDecimal totalAmount;
 
 }
+
