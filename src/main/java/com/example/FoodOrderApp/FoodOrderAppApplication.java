@@ -8,13 +8,17 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableAsync
 //@RequiredArgsConstructor
+
+
+
+
 public class FoodOrderAppApplication {
-//    private final NotificationService notificationService;
 
 	public static void main(String[] args) {
 
@@ -22,18 +26,6 @@ public class FoodOrderAppApplication {
         );
 	}
 
-//    @Bean
-//    CommandLineRunner runner(){
-//        return args -> {
-//            NotificationDTO notificationDTO = NotificationDTO.builder()
-//                    .recipient("khansshahn@gmail.com")
-//                    .subject("Email sending test")
-//                    .body("Hi, how you doing!")
-//                    .type(NotificationType.EMAIL)
-//                    .build();
-//            notificationService.sendEmail(notificationDTO);
-//
-//        };
-//    }
+
 
 }

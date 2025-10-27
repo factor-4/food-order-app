@@ -35,7 +35,10 @@ public class SecurityFilter {
                 .exceptionHandling(ex->
                         ex.accessDeniedHandler(customAccessDenialHandler).authenticationEntryPoint(customAuthenticationEntryPoint))
                 .authorizeHttpRequests(req->
-                        req.requestMatchers("/api/auth/**", "/api/categories/**", "/api/reviews/**", "/api/menu/**").permitAll()
+                        req.requestMatchers("/api/auth/**", "/api/categories/**", "/api/reviews/**", "/api/menu/**",  "/index.html",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**", "/api/test/**", "/debug/**", "/ping/**").permitAll()
                                 .anyRequest().authenticated())
                 .sessionManagement(mag->mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
