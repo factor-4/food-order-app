@@ -10,11 +10,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+
 @Builder
 @Data
 public class AuthUser implements UserDetails {
 
     private User user;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles()

@@ -24,26 +24,25 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityFilter {
+
     private final AuthFilter authFilter;
-    private CustomAccessDenialHandler customAccessDenialHandler;
+    private final CustomAccessDenialHandler customAccessDenialHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .exceptionHandling(ex->
+                .exceptionHandling(ex ->
                         ex.accessDeniedHandler(customAccessDenialHandler).authenticationEntryPoint(customAuthenticationEntryPoint))
-                .authorizeHttpRequests(req->
-                        req.requestMatchers("/api/auth/**", "/api/categories/**", "/api/reviews/**", "/api/menu/**",  "/index.html",
-                                        "/swagger-ui.html",
-                                        "/swagger-ui/**",
-                                        "/v3/api-docs/**", "/api/test/**", "/debug/**", "/ping/**").permitAll()
+                .authorizeHttpRequests(req ->
+                        req.requestMatchers("/api/auth/**", "/api/categories/**", "/api/menu/**", "/api/reviews/**").permitAll()
                                 .anyRequest().authenticated())
-                .sessionManagement(mag->mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(mag -> mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-        return httpSecurity.build();
 
+        return httpSecurity.build();
     }
 
     @Bean
@@ -52,9 +51,8 @@ public class SecurityFilter {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
-
 }
+

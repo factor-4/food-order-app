@@ -31,30 +31,33 @@ public class AuthServiceImpl implements AuthService{
     private final JwtUtils jwtUtils;
     private final RoleRepository roleRepository;
 
+
     @Override
     public Response<?> register(RegistrationRequest registrationRequest) {
-        log.info("Inside register");
-        if(userRepository.existsByEmail(registrationRequest.getEmail())){
-            throw new BadRequestException("Email Already exists");
+
+        log.info("INSIDE register()");
+
+        // Validate the registration request
+        if (userRepository.existsByEmail(registrationRequest.getEmail())) {
+            throw new BadRequestException("Email already exists");
         }
 
+        // collect all roles from the request
         List<Role> userRoles;
-
-        if(registrationRequest.getRoles()!=null && !registrationRequest.getRoles().isEmpty()){
+        if (registrationRequest.getRoles() != null && !registrationRequest.getRoles().isEmpty()) {
             userRoles = registrationRequest.getRoles().stream()
-                    .map(roleName->roleRepository.findByName(roleName.toUpperCase())
-                            .orElseThrow(()-> new NotFoundException("Role with name  "+ roleName +"Not Found")))
+                    .map(roleName -> roleRepository.findByName(roleName.toUpperCase())
+                            .orElseThrow(() -> new NotFoundException("Role '" + roleName + "' Not Found")))
                     .toList();
-        }else {
+        } else {
+            // If no roles provided, default to CUSTOMER
             Role defaultRole = roleRepository.findByName("CUSTOMER")
-                    .orElseThrow(()-> new NotFoundException("Default customer role not found"));
-
+                    .orElseThrow(() -> new NotFoundException("Default CUSTOMER role Not Found"));
             userRoles = List.of(defaultRole);
         }
-
-        // build the user object
+        // Build the user object
         User userToSave = User.builder()
-                .name(registrationRequest.getName( ))
+                .name(registrationRequest.getName())
                 .email(registrationRequest.getEmail())
                 .phoneNumber(registrationRequest.getPhoneNumber())
                 .address(registrationRequest.getAddress())
@@ -64,43 +67,48 @@ public class AuthServiceImpl implements AuthService{
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        // Save the user
         userRepository.save(userToSave);
 
         log.info("User registered successfully");
 
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("user Registered Successfully")
+                .message("User Registered Successfully")
                 .build();
+
 
     }
 
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
-        log.info("Inside login");
 
+        log.info("INSIDE login1");
+
+        // Find the user by email
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(()-> new NotFoundException("Invalid Email"));
+                .orElseThrow(() -> new BadRequestException("Invalid Email"));
 
-        if(!user.isActive()){
+        if (!user.isActive()) {
             throw new NotFoundException("Account not active, Please contact customer support");
         }
 
-        // verify the password
-        if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
+        // Verify the password
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new BadRequestException("Invalid Password");
         }
 
         // Generate a token
-
         String token = jwtUtils.generateToken(user.getEmail());
 
-        // Extrac toles names as a list
+        // Extract role names as a list
         List<String> roleNames = user.getRoles().stream()
                 .map(Role::getName)
                 .toList();
 
+
         LoginResponse loginResponse = new LoginResponse();
+
         loginResponse.setToken(token);
         loginResponse.setRoles(roleNames);
 
@@ -109,6 +117,10 @@ public class AuthServiceImpl implements AuthService{
                 .message("Login Successful")
                 .data(loginResponse)
                 .build();
-
     }
 }
+
+
+
+
+

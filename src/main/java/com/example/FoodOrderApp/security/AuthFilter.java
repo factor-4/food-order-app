@@ -35,23 +35,22 @@ public class AuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = getTokenFromRequest(request);
+        String  token = getTokenFromRequest(request);
 
-        if(token!=null) {
+        if (token != null){
             String email;
 
             try {
                 email = jwtUtils.getUsernameFromToken(token);
 
-            } catch (Exception ex) {
+            }catch(Exception ex){
                 AuthenticationException authenticationException = new BadCredentialsException(ex.getMessage());
                 customAuthenticationEntryPoint.commence(request, response, authenticationException);
                 return;
             }
 
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
-
-            if(StringUtils.hasText(email) && jwtUtils.isTokenValid(token, userDetails)){
+            if (StringUtils.hasText(email) && jwtUtils.isTokenValid(token, userDetails)){
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
@@ -61,22 +60,30 @@ public class AuthFilter extends OncePerRequestFilter {
         }
 
         try {
-            filterChain.doFilter(request,response);
-        } catch (Exception e){
+            filterChain.doFilter(request, response);
+        }catch (Exception e){
             log.error(e.getMessage());
         }
-
-
-
     }
 
 
-
-    private String getTokenFromRequest(HttpServletRequest request){
+    private String getTokenFromRequest(HttpServletRequest request) {
         String tokenWithBearer = request.getHeader("Authorization");
-        if(tokenWithBearer != null && tokenWithBearer.startsWith("Bearer ")){
+        if (tokenWithBearer != null && tokenWithBearer.startsWith("Bearer ")) {
             return tokenWithBearer.substring(7);
         }
         return null;
     }
+
 }
+
+
+
+
+
+
+
+
+
+
+
