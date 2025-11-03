@@ -83,7 +83,7 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
 
-        log.info("INSIDE login1");
+        log.info("INSIDE login swagger doc");
 
         // Find the user by email
         User user = userRepository.findByEmail(loginRequest.getEmail())
