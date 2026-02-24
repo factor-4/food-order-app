@@ -30,7 +30,7 @@ build/
 !**/src/test/**/build/
 
 # Ignore application.properties to protect secrets
-src/main/resources/application.properties
+src/main/resources/applicationbackup.properties
 
 
 

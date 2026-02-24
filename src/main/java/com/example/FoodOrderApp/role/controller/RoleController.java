@@ -78,6 +78,7 @@ public class RoleController {
     )
     @GetMapping
     public ResponseEntity<Response<List<RoleDTO>>> getAllRoles() {
+        System.out.println("getroles in controller");
         return ResponseEntity.ok(roleService.getAllRoles());
     }
 

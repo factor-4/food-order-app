@@ -3,7 +3,7 @@ package com.example.FoodOrderApp.auth_users.services;
 import com.example.FoodOrderApp.auth_users.dtos.UserDTO;
 import com.example.FoodOrderApp.auth_users.entity.User;
 import com.example.FoodOrderApp.auth_users.repository.UserRepository;
-import com.example.FoodOrderApp.aws.AWSS3Service;
+import com.example.FoodOrderApp.tempservice.CloudinaryService;
 import com.example.FoodOrderApp.email_notification.dtos.NotificationDTO;
 import com.example.FoodOrderApp.email_notification.services.NotificationService;
 import com.example.FoodOrderApp.exceptions.BadRequestException;
@@ -20,38 +20,43 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URL;
+import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final NotificationService notificationService;
-    private final AWSS3Service awss3Service;
+    private final CloudinaryService cloudinaryService;
+
+    // Helper to extract public ID from Cloudinary URL (same as in MenuServiceImpl)
+    private String extractPublicIdFromUrl(String url) {
+        String[] parts = url.split("/");
+        if (parts.length >= 2) {
+            String folder = parts[parts.length - 2];
+            String file = parts[parts.length - 1].split("\\.")[0];
+            return folder + "/" + file;
+        }
+        return parts[parts.length - 1].split("\\.")[0];
+    }
+
     @Override
     public User getCurrentLoggedInInUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-
         return userRepository.findByEmail(email)
-                .orElseThrow(()-> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
     @Override
     public Response<List<UserDTO>> getAllUsers() {
-
         log.info("Inside getAllUsers()");
         List<User> userList = userRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
-
-        List<UserDTO> userDTOS = modelMapper.map(userList, new TypeToken<List<UserDTO>>(){}.getType());
-
-
+        List<UserDTO> userDTOS = modelMapper.map(userList, new TypeToken<List<UserDTO>>() {}.getType());
         return Response.<List<UserDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("All users received successfully")
@@ -62,11 +67,8 @@ public class UserServiceImpl implements UserService{
     @Override
     public Response<UserDTO> getOwnAccountDetails() {
         log.info("Inside getOwnAccountDetails()");
-
         User user = getCurrentLoggedInInUser();
-
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
-
         return Response.<UserDTO>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("success")
@@ -79,43 +81,44 @@ public class UserServiceImpl implements UserService{
         log.info("Inside updateOwnAccount()");
 
         User user = getCurrentLoggedInInUser();
-
         String profileUrl = user.getProfileUrl();
-
         MultipartFile imageFile = userDTO.getImageFile();
 
-        // check if new image was provided
-
-        if(imageFile != null && !imageFile.isEmpty()){
-            // delete old image in cloud if it exists
-            if(profileUrl != null && !profileUrl.isEmpty()){
-                String keyName = profileUrl.substring(profileUrl.lastIndexOf("/")+1);
-                awss3Service.deleteFile("profile/"+ keyName);
-                log.info("Deleted old profile image from s3");
+        // Check if new image was provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Delete old profile image if it exists
+            if (profileUrl != null && !profileUrl.isEmpty()) {
+                String publicId = extractPublicIdFromUrl(profileUrl);
+                try {
+                    cloudinaryService.deleteFile(publicId);
+                    log.info("Deleted old profile image: {}", publicId);
+                } catch (IOException e) {
+                    log.error("Failed to delete old profile image: {}", e.getMessage());
+                }
             }
 
-            String imageName = UUID.randomUUID().toString()+"-"+imageFile.getOriginalFilename();
-            URL newImageUrl = awss3Service.uploadFile("profile/"+ imageName, imageFile);
-            user.setProfileUrl(newImageUrl.toString());
+            // Upload new profile image
+            try {
+                String newImageUrl = cloudinaryService.uploadFile(imageFile, "profiles");
+                user.setProfileUrl(newImageUrl);
+                log.info("New profile image uploaded: {}", newImageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload profile image", e);
+            }
         }
-        // update user details
 
-        if(userDTO.getName() != null) user.setName(userDTO.getName());
-        if(userDTO.getPhoneNumber() != null) user.setPhoneNumber(userDTO.getPhoneNumber());
+        // Update user details
+        if (userDTO.getName() != null) user.setName(userDTO.getName());
+        if (userDTO.getPhoneNumber() != null) user.setPhoneNumber(userDTO.getPhoneNumber());
+        if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
+        if (userDTO.getPassword() != null) user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
-        if(userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
-
-        if(userDTO.getPassword() != null) user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-
-        if(userDTO.getEmail()!= null && !userDTO.getEmail().equals(user.getEmail())){
-            if(userRepository.existsByEmail(userDTO.getEmail())){
+        if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(userDTO.getEmail())) {
                 throw new BadRequestException("Email already exists");
             }
+            user.setEmail(userDTO.getEmail());
         }
-
-        user.setEmail(userDTO.getEmail());
-
-        // save the user
 
         userRepository.save(user);
 
@@ -123,8 +126,6 @@ public class UserServiceImpl implements UserService{
                 .statusCode(HttpStatus.OK.value())
                 .message("Account updated successfully")
                 .build();
-
-
     }
 
     @Override
@@ -132,14 +133,13 @@ public class UserServiceImpl implements UserService{
         log.info("INSIDE deactivateOwnAccount()");
 
         User user = getCurrentLoggedInInUser();
-
         user.setActive(false);
         userRepository.save(user);
 
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(user.getEmail())
                 .subject("Account Deactivate")
-                .body("Your account has been deactivated, contact suppoert")
+                .body("Your account has been deactivated, contact support")
                 .build();
 
         notificationService.sendEmail(notificationDTO);

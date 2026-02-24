@@ -55,6 +55,7 @@ public class RoleServiceImpl implements RoleService{
 
     @Override
     public Response<List<RoleDTO>> getAllRoles() {
+        System.out.println("getroles in services");
         List<Role> roles = roleRepository.findAll();
         List<RoleDTO> roleDTOS = roles.stream()
                 .map(role-> modelMapper.map(role, RoleDTO.class))
